@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Estacionamiento</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #444;
+        }
+        nav button {
+            background: none;
+            color: #fff;
+            border: none;
+            padding: 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        main {
+            padding: 1rem;
+            max-width: 600px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestión de Estacionamiento</h1>
+    </header>
+    <nav>
+        <button onclick="exportarDatos()">Exportar datos</button>
+        <button onclick="document.getElementById('importar').click()">Importar datos</button>
+    </nav>
+    <main>
+        <input id="importar" type="file" accept="application/json" style="display:none" onchange="importarDatos(event)">
+        <p id="mensaje"></p>
+    </main>
+
+    <script>
+        function exportarDatos() {
+            const historial = localStorage.getItem('historial');
+            const clientes = localStorage.getItem('clientes');
+            const data = { historial: historial ? JSON.parse(historial) : [], clientes: clientes ? JSON.parse(clientes) : [] };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'datos_estacionamiento.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importarDatos(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if ('historial' in data && 'clientes' in data) {
+                        localStorage.setItem('historial', JSON.stringify(data.historial));
+                        localStorage.setItem('clientes', JSON.stringify(data.clientes));
+                        document.getElementById('mensaje').textContent = 'Datos importados correctamente';
+                    } else {
+                        document.getElementById('mensaje').textContent = 'Archivo no válido';
+                    }
+                } catch (err) {
+                    document.getElementById('mensaje').textContent = 'Error al leer el archivo';
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
