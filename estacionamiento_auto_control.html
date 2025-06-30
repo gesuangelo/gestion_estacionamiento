@@ -38,8 +38,12 @@
 <body class="bg-gray-100 font-sans">
     <!-- Encabezado -->
     <header class="bg-blue-600 text-white shadow-md">
-        <div class="container mx-auto px-4 py-4">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
             <h1 class="text-2xl font-bold">Gestión de Estacionamiento</h1>
+            <div class="space-x-2">
+                <button id="export-data" class="bg-white text-blue-600 px-3 py-1 rounded-md hover:bg-gray-200">Exportar Datos</button>
+                <label for="import-file" class="bg-white text-blue-600 px-3 py-1 rounded-md hover:bg-gray-200 cursor-pointer">Importar Datos<input id="import-file" type="file" accept="application/json" class="hidden"></label>
+            </div>
         </div>
     </header>
 
@@ -705,6 +709,49 @@
         function saveParkingRecords(records) {
             localStorage.setItem('parkingRecords', JSON.stringify(records));
         }
+
+        // Funciones de importación y exportación
+        function exportData() {
+            const data = {
+                clients: getClients(),
+                records: getParkingRecords()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'parking_data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data.clients) && Array.isArray(data.records)) {
+                        saveClients(data.clients);
+                        saveParkingRecords(data.records);
+                        loadClients();
+                        loadParkedVehicles();
+                        loadHistory();
+                        showModal('Éxito', 'Datos importados correctamente');
+                    } else {
+                        showModal('Error', 'Archivo no válido');
+                    }
+                } catch (err) {
+                    showModal('Error', 'Error al leer el archivo');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        document.getElementById('export-data').addEventListener('click', exportData);
+        document.getElementById('import-file').addEventListener('change', importData);
     </script>
 </body>
-</html>s
+</html>
